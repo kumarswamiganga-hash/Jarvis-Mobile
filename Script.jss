@@ -1,48 +1,82 @@
 
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
-const send = document.getElementById("send");
+const sendButton = document.getElementById("send");
 
-function addMessage(text, who) {
-    const message = document.createElement("div");
+function addMessage(message, type) {
+    const element = document.createElement("div");
 
-    message.className = "msg " + who;
-    message.innerText = text;
+    element.className = "msg " + type;
+    element.textContent = message;
 
-    chat.appendChild(message);
+    chat.appendChild(element);
     chat.scrollTop = chat.scrollHeight;
 
-    return message;
+    return element;
+}
+
+function getJarvisReply(message) {
+    const text = message.toLowerCase();
+
+    if (text.includes("hello") || text.includes("hi")) {
+        return "Hello, Sir. How can I help you today?";
+    }
+
+    if (text.includes("your name")) {
+        return "I am J.A.R.V.I.S, your personal assistant interface, Sir.";
+    }
+
+    if (text.includes("how are you")) {
+        return "All interface systems are functioning normally, Sir.";
+    }
+
+    if (text.includes("time")) {
+        return "Your device time is " +
+            new Date().toLocaleTimeString() + ", Sir.";
+    }
+
+    if (text.includes("date")) {
+        return "Today's date is " +
+            new Date().toLocaleDateString() + ", Sir.";
+    }
+
+    if (text.includes("status")) {
+        return "The JARVIS mobile interface is online, Sir.";
+    }
+
+    return "I received your message, Sir. My current mobile demo mode has limited responses. A real AI connection is not configured yet.";
 }
 
 function sendMessage() {
-    const text = input.value.trim();
+    const message = input.value.trim();
 
-    if (!text) return;
+    if (!message) {
+        return;
+    }
 
-    addMessage("YOU: " + text, "user");
+    addMessage("YOU: " + message, "user");
 
     input.value = "";
-    send.disabled = true;
+    sendButton.disabled = true;
 
-    const processing = addMessage(
-        "J.A.R.V.I.S: Processing...",
+    const thinkingMessage = addMessage(
+        "J.A.R.V.I.S: Processing your request...",
         "ai"
     );
 
-    setTimeout(() => {
-        processing.innerText =
-            "J.A.R.V.I.S: Systems online. How may I assist you, Sir?";
+    setTimeout(function () {
+        thinkingMessage.textContent =
+            "J.A.R.V.I.S: " + getJarvisReply(message);
 
-        send.disabled = false;
+        chat.scrollTop = chat.scrollHeight;
+        sendButton.disabled = false;
         input.focus();
-
-    }, 1000);
+    }, 700);
 }
 
-send.addEventListener("click", sendMessage);
+sendButton.addEventListener("click", sendMessage);
 
-input.addEventListener("keydown", (event) => {
+input.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
         sendMessage();
     }
