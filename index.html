@@ -1,98 +1,31 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta name="theme-color" content="#03080e">
-    <meta name="description" content="JARVIS Mobile AI Assistant">
-
-    <title>J.A.R.V.I.S | Mobile Edition</title>
-
-    <link rel="stylesheet" href="./Style.css">
-    <script src="./script.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J.A.R.V.I.S</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-    <header class="header">
-        <h1>J.A.R.V.I.S</h1>
-        <p>MOBILE INTELLIGENCE SYSTEM</p>
-        <span class="header-line"></span>
-    </header>
-
-    <main class="container">
-
-        <section class="core-section">
-            <div class="core">
-                <div class="ring ring-one"></div>
-                <div class="ring ring-two"></div>
-                <div class="ring ring-three"></div>
-                <div class="center">
-                    <span>J</span>
-                </div>
-            </div>
-
-            <p class="core-text">CORE ACTIVE</p>
-            <p class="core-subtitle">PERSONAL AI INTERFACE</p>
-        </section>
-
-        <section class="status panel">
-            <h2>SYSTEM STATUS</h2>
-
-            <div class="status-row">
-                <span>AI CORE</span>
-                <b class="online">● ONLINE</b>
-            </div>
-
-            <div class="status-row">
-                <span>NETWORK</span>
-                <b class="online">● ONLINE</b>
-            </div>
-
-            <div class="status-row">
-                <span>VOICE</span>
-                <b class="locked">○ LOCKED</b>
-            </div>
-
-            <div class="status-row">
-                <span>MEMORY</span>
-                <b class="locked">○ LOCKED</b>
-            </div>
-        </section>
-
-        <section class="assistant panel">
-            <h2>JARVIS COMMUNICATION</h2>
-
-            <div class="chat" id="chat" aria-live="polite">
-                <div class="msg ai">
-                    J.A.R.V.I.S: Good day, Sir. Systems are ready. How may I assist you?
-                </div>
-            </div>
-
-            <div class="input-area">
-                <input
-                    type="text"
-                    id="msg"
-                    placeholder="Ask J.A.R.V.I.S..."
-                    autocomplete="off"
-                    aria-label="Message to JARVIS"
-                >
-
-                <button id="send" type="button">SEND</button id="mic-btn">🎙️</button>
-
-            <p class="footer-note">
-                J.A.R.V.I.S MOBILE EDITION | INTERFACE ONLINE
-            </p>
-        </section>
-
-    </main>
-
-    <footer>
-        <p>STARK TECHNOLOGY SYSTEMS</p>
-        <p>PERSONAL AI INTERFACE</p>
-    </footer>
-
+ <header><h1>J.A.R.V.I.S</h1><p>MOBILE EDITION</p></header>
+ <div class="core">
+ <div class="ring r1"></div>
+ <div class="ring r2"></div>
+ <div class="center"></div>
+ </div>
+ <p class="core-text">CORE ACTIVE</p>
+ <div class="status">
+ <h2>SYSTEM STATUS</h2>
+ <div class="row"><span>AI CORE</span><b class="on">● ONLINE</b></div>
+ <div class="row"><span>NETWORK</span><b class="on">● ONLINE</b></div>
+ <div class="row"><span>VOICE</span><b class="off">○ LOCKED</b></div>
+ <div class="row"><span>MEMORY</span><b class="off">○ LOCKED</b></div>
+ </div>
+ <div class="chat" id="chat"></div>
+ <div class="input-area">
+ <input id="msg" placeholder="Ask J.A.R.V.I.S...">
+ <button id="send">SEND</button>
+ </div>
+ <script src="script.js"></script>
 </body>
 </html>
