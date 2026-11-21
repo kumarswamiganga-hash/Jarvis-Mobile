@@ -1,305 +1,243 @@
-<script>
-    const API_BASE = "https://jarvis-ai-brain.kumarswamiganga.workers.dev";
-    const VOICE_LANGUAGE = "en-IN";
-    const MEMORY_KEY = "JARVIS_CONVERSATION_MEMORY";
-    const CLOUD_MEMORY_KEY = "JARVIS_CLOUD_MEMORY_ID";
-
-    const chatForm = document.getElementById("chat-form");
-    const userInput = document.getElementById("user-input");
-    const chatMessages = document.getElementById("chat-messages");
-    const micButton = document.getElementById("mic-button");
-    const sendButton = document.getElementById("send-button");
-    const statusIndicator = document.getElementById("status-indicator");
-    const assistantStatus = document.getElementById("assistant-status");
-    const arcReactor = document.getElementById("arc-reactor");
-    const clearMemoryBtn = document.getElementById("clear-memory-btn");
-
-    let conversationMemory = loadLocalMemory();
-    let recognition = null;
-    let isListening = false;
-    let isBusy = false;
-
-    function loadLocalMemory() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(MEMORY_KEY) || "[]");
-        return Array.isArray(saved) ? saved.slice(-30) : [];
-      } catch {
-        return [];
-      }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#030914" />
+  <title>J.A.R.V.I.S. // Mobile HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #030914;
+      --bg-panel: rgba(8, 22, 44, 0.72);
+      --cyan: #00f0ff;
+      --cyan-dim: rgba(0, 240, 255, 0.25);
+      --cyan-glow: 0 0 15px rgba(0, 240, 255, 0.55);
+      --amber: #ffae00;
+      --danger: #ff3b5c;
+      --text-main: #e6f7ff;
+      --text-muted: #6ea8c9;
     }
 
-    function saveLocalMemory() {
-      localStorage.setItem(MEMORY_KEY, JSON.stringify(conversationMemory.slice(-30)));
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: 'Rajdhani', sans-serif;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
     }
 
-    function setStatus(message, mode = "idle") {
-      if (assistantStatus) assistantStatus.textContent = message.toUpperCase();
-      if (arcReactor) {
-        arcReactor.classList.remove("listening", "thinking", "speaking");
-        if (mode !== "idle") arcReactor.classList.add(mode);
-      }
+    .hud-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    function renderBubble(message, sender) {
-      const row = document.createElement("div");
-      row.className = `message ${sender === "user" ? "user-message" : "assistant-message"}`;
-
-      const avatar = document.createElement("div");
-      avatar.className = "message-avatar";
-      avatar.textContent = sender === "user" ? "S" : "J";
-
-      const content = document.createElement("div");
-      content.className = "message-content";
-
-      const name = document.createElement("span");
-      name.className = "message-name";
-      name.textContent = sender === "user" ? "SIR" : "JARVIS";
-
-      const paragraph = document.createElement("p");
-      paragraph.textContent = message;
-
-      content.appendChild(name);
-      content.appendChild(paragraph);
-
-      if (sender === "user") {
-        row.appendChild(content);
-        row.appendChild(avatar);
-      } else {
-        row.appendChild(avatar);
-        row.appendChild(content);
-      }
-
-      chatMessages.appendChild(row);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+    .hud-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 540px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 14px;
+      gap: 10px;
     }
 
-    function addMessage(message, sender) {
-      renderBubble(message, sender);
-      conversationMemory.push({
-        role: sender === "user" ? "user" : "assistant",
-        content: message,
-      });
-      conversationMemory = conversationMemory.slice(-30);
-      saveLocalMemory();
-      syncCloudMemory();
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--cyan-dim);
+      padding-bottom: 8px;
     }
 
-    function buildGeminiContext() {
-      return conversationMemory.slice(-20).map((item) => ({
-        role: item.role,
-        content: item.content,
-      }));
+    .brand-tag {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      display: block;
     }
 
-    async function sendMessage(message) {
-      if (!message.trim() || isBusy) return;
-
-      isBusy = true;
-      userInput.value = "";
-      sendButton.disabled = true;
-
-      addMessage(message, "user");
-      setStatus("Processing command...", "thinking");
-
-      try {
-        const response = await fetch(`${API_BASE}/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message,
-            history: buildGeminiContext(),
-            memoryId: localStorage.getItem(CLOUD_MEMORY_KEY),
-          }),
-        });
-
-        const data = await response.json();
-        if (!response.ok || data.success === false) {
-          throw new Error(data.error || "AI service unavailable.");
-        }
-
-        const reply = data.reply || data.response || data.message;
-        if (!reply) throw new Error("Empty response from JARVIS.");
-
-        addMessage(reply, "assistant");
-        await speakMessage(reply);
-      } catch (error) {
-        console.error("JARVIS error:", error);
-        addMessage(
-          "I'm sorry, Sir. I encountered a link disruption with my AI core.",
-          "assistant"
-        );
-        setStatus("Connection problem", "idle");
-      } finally {
-        isBusy = false;
-        sendButton.disabled = false;
-        userInput.focus();
-      }
+    .brand h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      text-shadow: var(--cyan-glow);
     }
 
-    chatForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      sendMessage(userInput.value);
-    });
+    .telemetry { display: flex; align-items: center; gap: 8px; }
 
-    async function speakMessage(message) {
-      try {
-        setStatus("Speaking", "speaking");
-        const response = await fetch(`${API_BASE}/speak`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: message }),
-        });
-
-        if (!response.ok) throw new Error("ElevenLabs unavailable");
-
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-
-        audio.onended = () => {
-          URL.revokeObjectURL(audioUrl);
-          setStatus("Awaiting your command", "idle");
-        };
-        audio.onerror = () => {
-          URL.revokeObjectURL(audioUrl);
-          setStatus("Awaiting your command", "idle");
-        };
-
-        await audio.play();
-      } catch (error) {
-        if ("speechSynthesis" in window) {
-          const utter = new SpeechSynthesisUtterance(message);
-          utter.rate = 1.02;
-          utter.pitch = 0.95;
-          utter.onend = () => setStatus("Awaiting your command", "idle");
-          window.speechSynthesis.speak(utter);
-        } else {
-          setStatus("Awaiting your command", "idle");
-        }
-      }
+    .status-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 4px 8px;
+      border: 1px solid var(--cyan);
+      border-radius: 4px;
+      color: var(--cyan);
+      background: rgba(0, 240, 255, 0.08);
     }
 
-    function setupSpeechRecognition() {
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (!SpeechRecognition) {
-        micButton.disabled = true;
-        return;
-      }
-
-      recognition = new SpeechRecognition();
-      recognition.lang = VOICE_LANGUAGE;
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onstart = () => {
-        isListening = true;
-        micButton.classList.add("listening");
-        setStatus("Listening...", "listening");
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        userInput.value = transcript;
-        sendMessage(transcript);
-      };
-
-      recognition.onerror = () => {
-        setStatus("Microphone error", "idle");
-      };
-
-      recognition.onend = () => {
-        isListening = false;
-        micButton.classList.remove("listening");
-        if (!isBusy) setStatus("Awaiting your command", "idle");
-      };
+    .hud-btn-sm {
+      background: transparent;
+      border: 1px solid var(--cyan-dim);
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 7px;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
-    micButton.addEventListener("click", () => {
-      if (!recognition) {
-        alert("Voice recognition requires Chrome or Edge.");
-        return;
-      }
-      if (isListening) {
-        recognition.stop();
-      } else {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    });
+    .hud-btn-sm:hover { border-color: var(--danger); color: var(--danger); }
 
-    async function syncCloudMemory() {
-      const memoryId = localStorage.getItem(CLOUD_MEMORY_KEY);
-      try {
-        const response = await fetch(`${API_BASE}/memory`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "save",
-            memoryId,
-            history: conversationMemory.slice(-30),
-          }),
-        });
-        const data = await response.json();
-        if (data.success && data.memoryId) {
-          localStorage.setItem(CLOUD_MEMORY_KEY, data.memoryId);
-        }
-      } catch (e) {}
+    .core-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 0;
     }
 
-    async function loadCloudMemory() {
-      const memoryId = localStorage.getItem(CLOUD_MEMORY_KEY);
-      if (!memoryId) return;
-      try {
-        const response = await fetch(`${API_BASE}/memory`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "load", memoryId }),
-        });
-        const data = await response.json();
-        if (data.success && Array.isArray(data.history) && data.history.length) {
-          conversationMemory = data.history.slice(-30);
-          saveLocalMemory();
-        }
-      } catch (e) {}
+    .arc-reactor {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
     }
 
-    function restoreChat() {
-      if (!conversationMemory.length) return;
-      chatMessages.innerHTML = "";
-      conversationMemory.slice(-20).forEach((item) => {
-        renderBubble(item.content, item.role === "user" ? "user" : "assistant");
-      });
+    .ring { position: absolute; border-radius: 50%; border: 2px solid transparent; }
+
+    .outer-ring {
+      width: 112px; height: 112px;
+      border-top-color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      box-shadow: var(--cyan-glow);
+      animation: spinCW 8s linear infinite;
     }
 
-    clearMemoryBtn.addEventListener("click", () => {
-      localStorage.removeItem(MEMORY_KEY);
-      localStorage.removeItem(CLOUD_MEMORY_KEY);
-      conversationMemory = [];
-      chatMessages.innerHTML = "";
-      renderBubble("Memory banks purged, Sir. Ready for new directives.", "assistant");
-    });
-
-    async function initializeJarvis() {
-      setupSpeechRecognition();
-      try {
-        const res = await fetch(`${API_BASE}/health`);
-        const data = await res.json();
-        statusIndicator.textContent = data.success ? "SYSTEM ONLINE" : "CHECK WORKER";
-      } catch {
-        statusIndicator.textContent = "OFFLINE";
-      }
-
-      await loadCloudMemory();
-      restoreChat();
-      setStatus("Awaiting your command", "idle");
+    .mid-ring {
+      width: 86px; height: 86px;
+      border-left-color: var(--cyan);
+      border-right-color: var(--cyan);
+      border-style: dashed;
+      animation: spinCCW 5s linear infinite;
     }
 
-    initializeJarvis();
-  </script>
-</body>
-</html>
+    .inner-ring {
+      width: 62px; height: 62px;
+      border: 2px solid var(--cyan-dim);
+      box-shadow: inset 0 0 12px var(--cyan);
+    }
+
+    .core-center {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #80f8ff 0%, #00b8d4 60%, #004d66 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--cyan);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .core-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: #021019;
+    }
+
+    .arc-reactor.listening .outer-ring {
+      border-top-color: var(--danger);
+      border-bottom-color: var(--danger);
+      animation-duration: 2s;
+    }
+    .arc-reactor.listening .core-center {
+      background: radial-gradient(circle, #ff9eb0 0%, var(--danger) 70%);
+      box-shadow: 0 0 25px var(--danger);
+      transform: scale(1.12);
+    }
+
+    .arc-reactor.speaking .outer-ring,
+    .arc-reactor.thinking .outer-ring { animation-duration: 1.5s; }
+    .arc-reactor.speaking .core-center { animation: pulseCore 0.6s infinite alternate; }
+
+    .assistant-state {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 2px;
+      color: var(--cyan);
+    }
+
+    .sub-metrics {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .sub-metrics b { color: var(--text-main); }
+
+    .chat-panel {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--cyan-dim);
+      background: rgba(0, 240, 255, 0.04);
+    }
+
+    .live-dot { color: #00ff88; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message { display: flex; align-items: flex-start; gap: 9px; max-width: 88%; }
+    .user-message { align-self: flex-end; }
+    .assistant-message { align-self: flex-start; }
+
+    .message-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center
