@@ -532,7 +532,7 @@
         await speakMessage(reply);
       } catch (error) {
         console.error("JARVIS error:", error);
-        addMessage("I'm sorry, Sir. I encountered a link disruption with my AI core.", "assistant");
+        addMessage(`Core Error: ${error.message}`, "assistant");
         setStatus("Connection problem", "idle");
       } finally {
         isBusy = false;
