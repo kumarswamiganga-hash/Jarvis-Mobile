@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#030914" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>J.A.R.V.I.S. // Mobile HUD</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +19,7 @@
       --cyan-glow: 0 0 15px rgba(0, 240, 255, 0.55);
       --amber: #ffae00;
       --danger: #ff3b5c;
+      --green: #00ff88;
       --text-main: #e6f7ff;
       --text-muted: #6ea8c9;
     }
@@ -53,7 +56,7 @@
       display: flex;
       flex-direction: column;
       padding: 12px 14px;
-      gap: 10px;
+      gap: 9px;
     }
 
     .hud-header {
@@ -65,7 +68,7 @@
     }
 
     .brand-tag {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       letter-spacing: 2px;
       color: var(--text-muted);
       display: block;
@@ -73,19 +76,19 @@
 
     .brand h1 {
       font-family: 'Orbitron', sans-serif;
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       letter-spacing: 3px;
       color: var(--cyan);
       text-shadow: var(--cyan-glow);
     }
 
-    .telemetry { display: flex; align-items: center; gap: 8px; }
+    .telemetry { display: flex; align-items: center; gap: 6px; }
 
     .status-pill {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 1px;
-      padding: 4px 8px;
+      padding: 4px 7px;
       border: 1px solid var(--cyan);
       border-radius: 4px;
       color: var(--cyan);
@@ -104,29 +107,36 @@
       cursor: pointer;
     }
 
-    .hud-btn-sm:hover { border-color: var(--danger); color: var(--danger); }
+    .hud-btn-sm.active {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .hud-btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
 
     .core-section {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 6px 0;
+      padding: 4px 0;
     }
 
     .arc-reactor {
       position: relative;
-      width: 112px;
-      height: 112px;
+      width: 104px;
+      height: 104px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
     }
 
     .ring { position: absolute; border-radius: 50%; border: 2px solid transparent; }
 
     .outer-ring {
-      width: 112px; height: 112px;
+      width: 104px; height: 104px;
       border-top-color: var(--cyan);
       border-bottom-color: var(--cyan);
       box-shadow: var(--cyan-glow);
@@ -134,7 +144,7 @@
     }
 
     .mid-ring {
-      width: 86px; height: 86px;
+      width: 80px; height: 80px;
       border-left-color: var(--cyan);
       border-right-color: var(--cyan);
       border-style: dashed;
@@ -142,13 +152,13 @@
     }
 
     .inner-ring {
-      width: 62px; height: 62px;
+      width: 58px; height: 58px;
       border: 2px solid var(--cyan-dim);
       box-shadow: inset 0 0 12px var(--cyan);
     }
 
     .core-center {
-      width: 42px; height: 42px;
+      width: 40px; height: 40px;
       border-radius: 50%;
       background: radial-gradient(circle, #80f8ff 0%, #00b8d4 60%, #004d66 100%);
       display: flex;
@@ -160,7 +170,7 @@
 
     .core-label {
       font-family: 'Orbitron', sans-serif;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 900;
       color: #021019;
     }
@@ -182,13 +192,13 @@
 
     .assistant-state {
       font-family: 'Orbitron', sans-serif;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       letter-spacing: 2px;
       color: var(--cyan);
     }
 
     .sub-metrics {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       display: flex;
       gap: 8px;
@@ -210,8 +220,8 @@
     .panel-header {
       display: flex;
       justify-content: space-between;
-      padding: 8px 12px;
-      font-size: 0.74rem;
+      padding: 7px 12px;
+      font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 1.5px;
       color: var(--text-muted);
@@ -219,7 +229,7 @@
       background: rgba(0, 240, 255, 0.04);
     }
 
-    .live-dot { color: #00ff88; }
+    .live-dot { color: var(--green); }
 
     .chat-messages {
       flex: 1;
@@ -278,7 +288,32 @@
     .user-message .message-name { color: var(--amber); }
     .message-content p { font-size: 0.96rem; line-height: 1.4; white-space: pre-wrap; }
 
-    .command-dock { padding-top: 2px; }
+    /* Quick Command Chips */
+    .quick-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .quick-chips::-webkit-scrollbar { display: none; }
+
+    .chip-btn {
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid var(--cyan-dim);
+      color: var(--cyan);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 14px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .chip-btn:active { background: var(--cyan); color: #021019; }
+
+    .command-dock { display: flex; flex-direction: column; gap: 6px; }
 
     .input-bar {
       display: flex;
@@ -356,12 +391,13 @@
       </div>
       <div class="telemetry">
         <div class="status-pill" id="status-indicator">CONNECTING...</div>
-        <button id="clear-memory-btn" class="hud-btn-sm" title="Clear Memory">PURGE MEM</button>
+        <button id="auto-loop-btn" class="hud-btn-sm" title="Hands-Free Auto Mic">LOOP: OFF</button>
+        <button id="clear-memory-btn" class="hud-btn-sm danger" title="Clear Memory">PURGE</button>
       </div>
     </header>
 
     <section class="core-section">
-      <div class="arc-reactor" id="arc-reactor">
+      <div class="arc-reactor" id="arc-reactor" title="Tap Reactor to Speak">
         <div class="ring outer-ring"></div>
         <div class="ring mid-ring"></div>
         <div class="ring inner-ring"></div>
@@ -369,9 +405,9 @@
       </div>
       <div class="assistant-state" id="assistant-status">INITIALIZING SYSTEMS</div>
       <div class="sub-metrics">
-        <span>ENGINE: <b>GEMINI</b></span>
+        <span id="live-clock">--:-- IST</span>
         <span>•</span>
-        <span>VOICE: <b>ELEVENLABS</b></span>
+        <span>ENGINE: <b>GEMINI</b></span>
         <span>•</span>
         <span>KV: <b>ACTIVE</b></span>
       </div>
@@ -387,13 +423,19 @@
           <div class="message-avatar">J</div>
           <div class="message-content">
             <span class="message-name">JARVIS</span>
-            <p>Welcome back, Sir. All systems are online and calibrated. How may I assist you?</p>
+            <p>Welcome back, Sir. All systems are online and calibrated. Tap the Arc Reactor or mic to speak.</p>
           </div>
         </div>
       </div>
     </main>
 
     <footer class="command-dock">
+      <div class="quick-chips">
+        <button type="button" class="chip-btn" data-cmd="Give me a quick status briefing for today.">⚡ Briefing</button>
+        <button type="button" class="chip-btn" data-cmd="Open YouTube">▶ YouTube</button>
+        <button type="button" class="chip-btn" data-cmd="Open Google Maps">📍 Maps</button>
+        <button type="button" class="chip-btn" data-cmd="Give me a concise market and finance mindset tip for today.">📈 Market Tip</button>
+      </div>
       <form id="chat-form" class="input-bar">
         <button type="button" id="mic-button" class="mic-btn" aria-label="Voice Command">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
@@ -421,11 +463,40 @@
     const assistantStatus = document.getElementById("assistant-status");
     const arcReactor = document.getElementById("arc-reactor");
     const clearMemoryBtn = document.getElementById("clear-memory-btn");
+    const autoLoopBtn = document.getElementById("auto-loop-btn");
+    const liveClock = document.getElementById("live-clock");
 
     let conversationMemory = loadLocalMemory();
     let recognition = null;
     let isListening = false;
     let isBusy = false;
+    let autoLoop = false;
+
+    function updateClock() {
+      const now = new Date();
+      liveClock.textContent = now.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).toUpperCase();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    autoLoopBtn.addEventListener("click", () => {
+      autoLoop = !autoLoop;
+      autoLoopBtn.textContent = autoLoop ? "LOOP: ON" : "LOOP: OFF";
+      autoLoopBtn.classList.toggle("active", autoLoop);
+      if (autoLoop && !isListening && !isBusy && recognition) {
+        try { recognition.start(); } catch (e) {}
+      }
+    });
+
+    document.querySelectorAll(".chip-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        sendMessage(btn.getAttribute("data-cmd"));
+      });
+    });
 
     function loadLocalMemory() {
       try {
@@ -499,6 +570,29 @@
       }));
     }
 
+    function handleDeviceIntent(text) {
+      const lower = text.toLowerCase().trim();
+      if (lower === "open youtube") {
+        window.open("https://m.youtube.com", "_blank");
+        return "Opening YouTube for you now, Sir.";
+      }
+      if (lower.startsWith("search youtube for ")) {
+        const q = encodeURIComponent(text.slice(19));
+        window.open(`https://m.youtube.com/results?search_query=${q}`, "_blank");
+        return `Searching YouTube for ${text.slice(19)}, Sir.`;
+      }
+      if (lower === "open google maps" || lower === "open maps") {
+        window.open("https://maps.google.com", "_blank");
+        return "Launching Google Maps, Sir.";
+      }
+      if (lower.startsWith("search google for ") || lower.startsWith("google ")) {
+        const q = encodeURIComponent(lower.startsWith("google ") ? text.slice(7) : text.slice(18));
+        window.open(`https://www.google.com/search?q=${q}`, "_blank");
+        return "Running a Google search for you now, Sir.";
+      }
+      return null;
+    }
+
     async function sendMessage(message) {
       if (!message.trim() || isBusy) return;
 
@@ -507,6 +601,16 @@
       sendButton.disabled = true;
 
       addMessage(message, "user");
+
+      const localActionReply = handleDeviceIntent(message);
+      if (localActionReply) {
+        addMessage(localActionReply, "assistant");
+        await speakMessage(localActionReply);
+        isBusy = false;
+        sendButton.disabled = false;
+        return;
+      }
+
       setStatus("Processing command...", "thinking");
 
       try {
@@ -537,7 +641,6 @@
       } finally {
         isBusy = false;
         sendButton.disabled = false;
-        userInput.focus();
       }
     }
 
@@ -545,6 +648,15 @@
       event.preventDefault();
       sendMessage(userInput.value);
     });
+
+    function onFinishSpeaking() {
+      setStatus("Awaiting your command", "idle");
+      if (autoLoop && recognition && !isListening) {
+        setTimeout(() => {
+          try { recognition.start(); } catch (e) {}
+        }, 350);
+      }
+    }
 
     async function speakMessage(message) {
       try {
@@ -563,11 +675,11 @@
 
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
-          setStatus("Awaiting your command", "idle");
+          onFinishSpeaking();
         };
         audio.onerror = () => {
           URL.revokeObjectURL(audioUrl);
-          setStatus("Awaiting your command", "idle");
+          onFinishSpeaking();
         };
 
         await audio.play();
@@ -576,11 +688,23 @@
           const utter = new SpeechSynthesisUtterance(message);
           utter.rate = 1.02;
           utter.pitch = 0.95;
-          utter.onend = () => setStatus("Awaiting your command", "idle");
+          utter.onend = onFinishSpeaking;
           window.speechSynthesis.speak(utter);
         } else {
-          setStatus("Awaiting your command", "idle");
+          onFinishSpeaking();
         }
+      }
+    }
+
+    function toggleListening() {
+      if (!recognition) {
+        alert("Voice recognition requires Chrome or Edge.");
+        return;
+      }
+      if (isListening) {
+        recognition.stop();
+      } else {
+        try { recognition.start(); } catch (e) {}
       }
     }
 
@@ -617,17 +741,8 @@
       };
     }
 
-    micButton.addEventListener("click", () => {
-      if (!recognition) {
-        alert("Voice recognition requires Chrome or Edge.");
-        return;
-      }
-      if (isListening) {
-        recognition.stop();
-      } else {
-        try { recognition.start(); } catch (e) {}
-      }
-    });
+    micButton.addEventListener("click", toggleListening);
+    arcReactor.addEventListener("click", toggleListening);
 
     async function syncCloudMemory() {
       const memoryId = localStorage.getItem(CLOUD_MEMORY_KEY);
